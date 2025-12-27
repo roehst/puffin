@@ -7,26 +7,38 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 class PrologBridge {
   constructor() {
-    this.prologPath = path.join(__dirname, 'prolog');
+    this.prologPath = path.join(__dirname, '..', '..', 'prolog');
     this.prologModule = path.join(this.prologPath, 'puffin.pl');
   }
 
   /**
    * Execute a Prolog query and return the result
    * @param {string} query - Prolog query to execute
-   * @returns {Promise<any>} Query result
+   * @param {boolean} writeCanonical - Whether to use write_canonical
+   * @returns {Promise<string>} Query result
    */
-  async query(query) {
+  async query(query, writeCanonical = false) {
     return new Promise((resolve, reject) => {
-      const swipl = spawn('swipl', [
-        '-g', query,
-        '-g', 'halt',
-        '-t', 'halt(1)',
-        this.prologModule
-      ]);
+      // Create a temporary file for the query
+      const tmpQuery = path.join('/tmp', `puffin_query_${Date.now()}.pl`);
+      const queryContent = `
+:- use_module('${this.prologModule}').
+:- initialization(main, main).
+
+main :-
+  ${query},
+  halt(0).
+main :-
+  halt(1).
+`;
+      
+      fs.writeFileSync(tmpQuery, queryContent);
+
+      const swipl = spawn('swipl', ['-q', tmpQuery]);
 
       let stdout = '';
       let stderr = '';
@@ -40,28 +52,24 @@ class PrologBridge {
       });
 
       swipl.on('close', (code) => {
+        // Clean up temp file
+        try {
+          fs.unlinkSync(tmpQuery);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+
         if (code === 0) {
-          resolve(this.parseOutput(stdout));
+          resolve(stdout.trim());
         } else {
-          reject(new Error(`Prolog query failed: ${stderr}`));
+          reject(new Error(`Prolog query failed (code ${code}): ${stderr || 'Unknown error'}`));
         }
       });
-    });
-  }
 
-  /**
-   * Parse Prolog output to JavaScript object
-   * @param {string} output - Raw output from Prolog
-   * @returns {any} Parsed result
-   */
-  parseOutput(output) {
-    try {
-      // Simple parsing - just return the trimmed output
-      // In a real implementation, you'd parse Prolog terms properly
-      return output.trim();
-    } catch (error) {
-      return output;
-    }
+      swipl.on('error', (err) => {
+        reject(new Error(`Failed to spawn swipl: ${err.message}`));
+      });
+    });
   }
 
   /**
@@ -71,7 +79,7 @@ class PrologBridge {
    */
   async validateProject(project) {
     const projectDict = this.toDict(project);
-    const query = `validate_project(${projectDict}, Result), write_canonical(Result), nl`;
+    const query = `validate_project(${projectDict}, Result), (Result = valid -> write('VALID') ; Result = invalid(Errors), write('INVALID:'), write(Errors))`;
     
     try {
       const result = await this.query(query);
@@ -88,7 +96,7 @@ class PrologBridge {
    */
   async validatePrompt(prompt) {
     const promptDict = this.toDict(prompt);
-    const query = `validate_prompt(${promptDict}, Result), write_canonical(Result), nl`;
+    const query = `validate_prompt(${promptDict}, Result), (Result = valid -> write('VALID') ; Result = invalid(Errors), write('INVALID:'), write(Errors))`;
     
     try {
       const result = await this.query(query);
@@ -104,7 +112,7 @@ class PrologBridge {
    * @returns {Promise<Object>} Model information
    */
   async getModel(modelId) {
-    const query = `claude_model(${modelId}, Name, Desc, Tier), format('~w|~w|~w~n', [Name, Desc, Tier])`;
+    const query = `claude_model(${modelId}, Name, Desc, Tier), format('~w|~w|~w', [Name, Desc, Tier])`;
     
     try {
       const result = await this.query(query);
@@ -125,7 +133,7 @@ class PrologBridge {
    * @returns {Promise<string[]>} Array of model IDs
    */
   async getAllModels() {
-    const query = `all_models(Models), write_canonical(Models), nl`;
+    const query = `all_models(Models), format('~w', [Models])`;
     
     try {
       const result = await this.query(query);
@@ -145,7 +153,7 @@ class PrologBridge {
    * @returns {Promise<string>} Generated UUID
    */
   async generateId() {
-    const query = `generate_id(Id), write(Id), nl`;
+    const query = `generate_id(Id), write(Id)`;
     
     try {
       const result = await this.query(query);
@@ -175,7 +183,9 @@ class PrologBridge {
    */
   toDict(obj) {
     const pairs = Object.entries(obj).map(([key, value]) => {
-      const prologKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      // Don't convert camelCase for these known fields - keep them as-is
+      const knownFields = ['branchId', 'projectPath', 'projectName', 'parentId'];
+      const prologKey = knownFields.includes(key) ? key : key.replace(/([A-Z])/g, '_$1').toLowerCase();
       let prologValue;
       
       if (typeof value === 'string') {
@@ -184,6 +194,8 @@ class PrologBridge {
         prologValue = `[${value.map(v => typeof v === 'string' ? `'${v}'` : v).join(',')}]`;
       } else if (typeof value === 'object' && value !== null) {
         prologValue = this.toDict(value);
+      } else if (value === null || value === undefined) {
+        prologValue = '[]';
       } else {
         prologValue = value;
       }
@@ -200,12 +212,13 @@ class PrologBridge {
    * @returns {{valid: boolean, errors: string[]}}
    */
   parseValidationResult(result) {
-    if (result.includes('valid')) {
+    if (result.startsWith('VALID')) {
       return { valid: true, errors: [] };
-    } else if (result.includes('invalid')) {
+    } else if (result.startsWith('INVALID:')) {
       // Extract error list
-      const match = result.match(/\[(.*?)\]/);
-      const errors = match ? match[1].split(',').map(e => e.trim().replace(/'/g, '')) : [];
+      const errorsPart = result.substring('INVALID:'.length);
+      const match = errorsPart.match(/\[(.*?)\]/);
+      const errors = match ? match[1].split(',').map(e => e.trim().replace(/'/g, '')) : ['Validation failed'];
       return { valid: false, errors };
     }
     return { valid: false, errors: ['Unknown validation result'] };

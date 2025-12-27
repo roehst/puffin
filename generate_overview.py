@@ -3,7 +3,7 @@
 OVERVIEW.md Generator for Puffin Project
 
 This script analyzes the Puffin codebase and generates a comprehensive OVERVIEW.md
-document with B-method style specifications and mermaid diagrams.
+document with B-method style specifications and Mermaid diagrams.
 
 B-method flavor includes:
 - Abstract machine specifications
@@ -292,7 +292,19 @@ class OverviewGenerator:
     
     def _generate_header(self) -> str:
         """Generate the document header."""
-        return """# PUFFIN - System Overview
+        # Try to detect project name from package.json or use directory name
+        project_name = "PUFFIN"
+        try:
+            package_json_path = os.path.join(self.base_path, 'package.json')
+            if os.path.exists(package_json_path):
+                with open(package_json_path, 'r', encoding='utf-8') as f:
+                    package_data = json.load(f)
+                    project_name = package_data.get('name', 'PUFFIN').upper()
+        except Exception:
+            # Fallback to directory name
+            project_name = os.path.basename(self.base_path).upper()
+        
+        return f"""# {project_name} - System Overview
 
 **Generated:** Automated documentation from source code analysis  
 **Method:** B-method inspired formal specification  
@@ -1036,8 +1048,15 @@ def main():
     
     # Write to file
     output_path = os.path.join(base_path, 'OVERVIEW.md')
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(overview_content)
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(overview_content)
+    except IOError as e:
+        print(f"Error: Failed to write OVERVIEW.md: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Unexpected error while writing file: {e}")
+        sys.exit(1)
     
     print(f"✓ OVERVIEW.md generated successfully!")
     print(f"  Location: {output_path}")

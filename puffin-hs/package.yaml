@@ -1,0 +1,73 @@
+name:                puffin-hs
+version:             0.1.0.0
+github:              "roehst/puffin"
+license:             MIT
+author:              "jdubray"
+maintainer:          "example@example.com"
+copyright:           "2025 jdubray"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+synopsis:            Haskell translation of Puffin - A GUI for Claude Code
+category:            Development
+
+description:         Please see the README on GitHub at <https://github.com/roehst/puffin#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- text
+- containers
+- aeson
+- bytestring
+- process
+- filepath
+- directory
+- time
+- uuid
+- mtl
+- transformers
+- brick
+- vty
+- microlens
+- microlens-th
+- vector
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  puffin-hs-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - puffin-hs
+
+tests:
+  puffin-hs-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - puffin-hs
+    - hspec
+    - QuickCheck

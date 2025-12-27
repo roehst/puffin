@@ -61,9 +61,20 @@ Your Project/
 
 - **Platform**: Electron 33+
 - **Frontend**: Vanilla JavaScript (ES6+ modules)
+- **Backend Logic**: Prolog (SWI-Prolog 9.0+) for validation and business rules
 - **State Management**: SAM Pattern ([sam-pattern](https://www.npmjs.com/package/sam-pattern) + [sam-fsm](https://github.com/jdubray/sam-fsm))
 - **AI Integration**: Claude Code CLI (spawned as subprocess with JSON streaming)
 - **Markdown**: [marked](https://www.npmjs.com/package/marked) for rendering responses
+
+### Prolog Backend
+
+Puffin includes a Prolog implementation of its core business logic, providing:
+- **Declarative Validation**: Rule-based validation using logic programming
+- **State Management**: SAM pattern implemented in Prolog
+- **Model Definitions**: Claude models and configuration predicates
+- **Type Safety**: Strong guarantees through Prolog's unification
+
+See [prolog/README.md](prolog/README.md) for details on the Prolog implementation.
 
 ## Getting Started
 
@@ -72,6 +83,7 @@ Your Project/
 - Node.js 18+
 - Claude Code CLI installed globally: `npm install -g @anthropic-ai/claude-code`
 - Active Claude Code subscription or API access
+- **SWI-Prolog 9.0+** (optional, for Prolog backend): Install with `apt-get install swi-prolog` (Linux) or from [swi-prolog.org](https://www.swi-prolog.org/)
 
 ### Claude Authentication
 
@@ -138,6 +150,9 @@ npm run dev
 # Run tests
 npm test
 
+# Test Prolog backend (requires SWI-Prolog)
+cd prolog && swipl -g "halt" test.pl
+
 # Package for distribution
 npm run package
 ```
@@ -152,7 +167,8 @@ puffin/
 │   │   ├── preload.js     # Secure IPC bridge
 │   │   ├── ipc-handlers.js
 │   │   ├── puffin-state.js # .puffin/ directory management
-│   │   └── claude-service.js # Claude CLI subprocess
+│   │   ├── claude-service.js # Claude CLI subprocess
+│   │   └── prolog-bridge.js # Bridge to Prolog backend
 │   │
 │   ├── renderer/          # Electron renderer process
 │   │   ├── index.html
@@ -172,6 +188,15 @@ puffin/
 │   │       └── debugger/
 │   │
 │   └── shared/            # Shared utilities (validators, formatters, constants)
+│
+├── prolog/                # Prolog backend implementation
+│   ├── puffin.pl          # Main module
+│   ├── validators.pl      # Validation predicates
+│   ├── models.pl          # Claude model definitions
+│   ├── state.pl           # State management (SAM pattern)
+│   ├── formatters.pl      # Formatting utilities
+│   ├── test.pl            # Test suite
+│   └── README.md          # Prolog documentation
 │
 ├── projects/              # Example projects (optional)
 └── tests/

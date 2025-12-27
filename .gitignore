@@ -26,3 +26,6 @@ projects/*.json
 
 # Keep projects folder structure
 !projects/.gitkeep
+
+# Examples directory (generated files)
+examples/sample-code.js

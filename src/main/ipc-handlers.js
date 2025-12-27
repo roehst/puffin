@@ -10,12 +10,14 @@ const { PuffinState } = require('./puffin-state')
 const { ClaudeService } = require('./claude-service')
 const { DeveloperProfileManager } = require('./developer-profile')
 const { GitService } = require('./git-service')
+const { MutationTestingService } = require('./mutation-testing')
 const ClaudeMdGenerator = require('./claude-md-generator')
 
 let puffinState = null
 let claudeService = null
 let developerProfile = null
 let gitService = null
+let mutationTestingService = null
 let claudeMdGenerator = null
 let projectPath = null
 
@@ -30,6 +32,7 @@ function setupIpcHandlers(ipcMain, initialProjectPath) {
   claudeService = new ClaudeService()
   developerProfile = new DeveloperProfileManager()
   gitService = new GitService()
+  mutationTestingService = new MutationTestingService()
   claudeMdGenerator = new ClaudeMdGenerator()
 
   // Set Claude CLI working directory to the project path
@@ -37,6 +40,9 @@ function setupIpcHandlers(ipcMain, initialProjectPath) {
 
   // Set Git service project path
   gitService.setProjectPath(projectPath)
+
+  // Set Mutation Testing service project path
+  mutationTestingService.setProjectPath(projectPath)
 
   // State handlers
   setupStateHandlers(ipcMain)
@@ -52,6 +58,9 @@ function setupIpcHandlers(ipcMain, initialProjectPath) {
 
   // Git handlers
   setupGitHandlers(ipcMain)
+
+  // Mutation testing handlers
+  setupMutationTestingHandlers(ipcMain)
 
   // Shell handlers
   setupShellHandlers(ipcMain)
@@ -1359,6 +1368,72 @@ function setupShellHandlers(ipcMain) {
   ipcMain.handle('shell:openExternal', async (event, url) => {
     try {
       await shell.openExternal(url)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  })
+}
+
+/**
+ * Mutation Testing IPC handlers
+ * @param {IpcMain} ipcMain
+ */
+function setupMutationTestingHandlers(ipcMain) {
+  // Get available mutation operators
+  ipcMain.handle('mutation:getOperators', async () => {
+    try {
+      const operators = mutationTestingService.getAvailableOperators()
+      return { success: true, operators }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  })
+
+  // Generate mutants for a file
+  ipcMain.handle('mutation:generateMutants', async (event, { filePath, operators }) => {
+    try {
+      const mutants = await mutationTestingService.generateMutants(filePath, operators)
+      return { 
+        success: true, 
+        mutants: mutants.map(m => ({
+          id: m.id,
+          filePath: m.filePath,
+          operator: m.operator,
+          mutation: m.mutation,
+          line: m.line
+        })),
+        count: mutants.length
+      }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  })
+
+  // Run mutation testing
+  ipcMain.handle('mutation:runTests', async (event, { testCommand }) => {
+    try {
+      const report = await mutationTestingService.runMutationTesting(testCommand || 'npm test')
+      return { success: true, report }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  })
+
+  // Get mutation testing report
+  ipcMain.handle('mutation:getReport', async () => {
+    try {
+      const report = mutationTestingService.generateReport(0)
+      return { success: true, report }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  })
+
+  // Reset mutation testing state
+  ipcMain.handle('mutation:reset', async () => {
+    try {
+      mutationTestingService.reset()
       return { success: true }
     } catch (error) {
       return { success: false, error: error.message }

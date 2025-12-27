@@ -282,6 +282,37 @@ Puffin includes a comprehensive Git panel for repository management directly wit
 
 **Cross-Platform Line Endings**: Puffin includes a `.gitattributes` file that automatically normalizes line endings (CRLF/LF) across different operating systems. This prevents phantom "modified" files when working in mixed environments like Windows with WSL. No additional configuration is required—Git will automatically handle line ending conversions on commit.
 
+## Documentation
+
+### OVERVIEW.md Generation
+
+Puffin includes a Python script that automatically generates comprehensive documentation with B-method style formal specifications and Mermaid diagrams.
+
+**Generate the OVERVIEW.md:**
+```bash
+python3 generate_overview.py
+```
+
+The script will:
+- Analyze all JavaScript source files in the codebase
+- Extract classes, functions, dependencies, and descriptions
+- Generate formal specifications using B-method notation (abstract machines, invariants, refinements)
+- Create Mermaid diagrams for architecture visualization
+- Output a comprehensive `OVERVIEW.md` document at the repository root
+
+The generated documentation includes:
+1. Abstract Machine Specification (B-method style)
+2. Architecture Overview with Mermaid diagrams
+3. System Components catalog
+4. State Machine Specifications
+5. Refinement Layers (abstract to concrete)
+6. Module Catalog with detailed specifications
+7. Dependency Graphs
+8. Security Considerations
+9. Formal Properties & Invariants
+
+**Requirements:** Python 3.6 or higher
+
 ## License
 
 MIT

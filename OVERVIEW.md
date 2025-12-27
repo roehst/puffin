@@ -235,7 +235,7 @@ graph TD
 **Description:** Puffin - IPC Handlers Handles inter-process communication between main and renderer. Uses PuffinState for directory-based state management.
 
 **Functions:** setupIpcHandlers, setupStateHandlers, regenerateUiBranchContext, setupClaudeHandlers, setupFileHandlers ... (+10 more)
-**Exports:** setupIpcHandlers, setupPluginHandlers, setupPluginManagerHandlers, setupViewRegistryHandlers, setupPluginStyleHandlers
+**Exports:** setupIpcHandlers, setupPluginHandlers, setupPluginManagerHandlers, setupViewRegistryHandlers, setupPluginStyleHandlers ... (+1 more)
 
 #### `src/main/claude-service.js`
 
@@ -302,7 +302,7 @@ graph TD
 **Description:** Contribution Parser Parses and validates plugin contributions from manifests. Handles view contributions, commands, menus, and other extension points.
 
 **Functions:** parseViewContributions, validateViewContribution, logContributionErrors, getViewsByLocation, getViewLocations ... (+1 more)
-**Exports:** parseViewContributions, validateViewContribution, logContributionErrors, getViewsByLocation, getViewLocations
+**Exports:** parseViewContributions, validateViewContribution, logContributionErrors, getViewsByLocation, getViewLocations ... (+2 more)
 
 #### `src/main/plugins/plugin-registry.js`
 
@@ -316,7 +316,7 @@ graph TD
 
 **Description:** Puffin Plugin System Main exports for the plugin system.
 
-**Exports:** ManifestValidator, ManifestValidationError, PluginLoader, Plugin, PluginLoadState
+**Exports:** ManifestValidator, ManifestValidationError, PluginLoader, Plugin, PluginLoadState ... (+14 more)
 
 #### `src/main/plugins/manifest-validator.js`
 
@@ -578,7 +578,7 @@ graph TD
 
 **Classes:** t, w
 **Functions:** a, G, L, M, P ... (+20 more)
-**Exports:** createInstance, SAM, on, oneOf, first
+**Exports:** createInstance, SAM, on, oneOf, first ... (+2 more)
 
 #### `src/renderer/lib/sam-fsm.js`
 
@@ -612,14 +612,14 @@ graph TD
 **Description:** Puffin SAM Actions Actions are pure functions that compute proposals based on user intent. They don't mutate state directly - they propose changes to the model.
 
 **Functions:** initializeApp, loadState, appError, recover, updateConfig ... (+107 more)
-**Exports:** initializeApp, loadState, appError, recover, updateConfig
+**Exports:** initializeApp, loadState, appError, recover, updateConfig ... (+107 more)
 
 #### `src/renderer/sam/model.js`
 
 **Description:** Puffin SAM Model (Acceptors) Acceptors validate and apply proposals to the model. They ensure the model remains consistent and valid. State is automatically persisted to .puffin/ directory via IPC. No explicit save/load - Puffin opens a directory and state is always synced.
 
 **Functions:** findStoryIdsForPrompt, buildUiBranchContext, buildArchitectureBranchContext, buildBackendBranchContext, findPromptById ... (+3 more)
-**Exports:** initialModel, initializeAcceptor, loadStateAcceptor, appErrorAcceptor, recoverAcceptor
+**Exports:** initialModel, initializeAcceptor, loadStateAcceptor, appErrorAcceptor, recoverAcceptor ... (+103 more)
 
 ### 3.8 Shared Utilities
 
@@ -637,7 +637,7 @@ graph TD
 **Description:** Puffin Validators
 
 **Functions:** validateProject, validatePrompt, validateGuiElement, validateBranch, sanitizeString ... (+1 more)
-**Exports:** validateProject, validatePrompt, validateGuiElement, validateBranch, sanitizeString
+**Exports:** validateProject, validatePrompt, validateGuiElement, validateBranch, sanitizeString ... (+1 more)
 
 #### `src/shared/models.js`
 
@@ -656,14 +656,14 @@ graph TD
 
 **Description:** Puffin Constants
 
-**Exports:** BRANCH_TYPES, PROGRAMMING_STYLES, TESTING_APPROACHES, DOCUMENTATION_LEVELS, ERROR_HANDLING
+**Exports:** BRANCH_TYPES, PROGRAMMING_STYLES, TESTING_APPROACHES, DOCUMENTATION_LEVELS, ERROR_HANDLING ... (+7 more)
 
 #### `src/shared/formatters.js`
 
 **Description:** Puffin Formatters
 
 **Functions:** generateId, formatDate, formatRelativeTime, truncate, formatFileSize ... (+5 more)
-**Exports:** generateId, formatDate, formatRelativeTime, truncate, formatFileSize
+**Exports:** generateId, formatDate, formatRelativeTime, truncate, formatFileSize ... (+3 more)
 
 
 ---

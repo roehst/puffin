@@ -23,6 +23,8 @@ from collections import defaultdict
 # Configuration constants
 MAX_DIAGRAM_NODES = 10  # Maximum nodes to show in component diagrams
 MAX_FUNCTIONS_DISPLAY = 10  # Maximum functions to list before truncating
+MAX_ITEMS_PREVIEW = 5  # Maximum items to show in preview lists before truncating
+
 
 # Regex patterns for code analysis
 # Match: const {items} = require('module') or let name = require('module')
@@ -48,7 +50,27 @@ SINGLE_LINE_COMMENT_PATTERN = r"^//\s*(.+)"
 
 
 class FileAnalyzer:
-    """Analyzes JavaScript source files to extract structure and dependencies."""
+    """Analyzes JavaScript source files to extract structure and dependencies.
+    
+    This analyzer extracts:
+    - Import/require statements and dependencies
+    - Export declarations (module.exports, ES6 exports)
+    - Class definitions with inheritance
+    - Function declarations (regular and arrow functions)
+    - Constants (uppercase naming convention)
+    - File descriptions from header comments
+    
+    Attributes:
+        file_path (str): Full path to the source file
+        relative_path (str): Path relative to project root
+        content (str): File contents
+        imports (list): List of import/require statements
+        exports (list): List of exported identifiers
+        classes (list): List of class definitions with inheritance info
+        functions (list): List of function names
+        constants (list): List of constant names
+        description (str): File description from header comments
+    """
     
     def __init__(self, file_path: str):
         self.file_path = file_path
@@ -171,7 +193,28 @@ class FileAnalyzer:
 
 
 class OverviewGenerator:
-    """Generates the OVERVIEW.md document with B-method specifications."""
+    """Generates the OVERVIEW.md document with B-method specifications.
+    
+    Uses B-method inspired formal specification approach including:
+    - Abstract machine specifications (SETS, CONSTANTS, VARIABLES, INVARIANTS, OPERATIONS)
+    - Refinement layers from abstract to concrete implementation
+    - State machine specifications with formal transitions
+    - Formal properties (invariants, liveness, safety)
+    - Mermaid diagrams for visual architecture representation
+    
+    Generated sections:
+    1. Abstract Machine Specification
+    2. Architecture Overview (with diagrams)
+    3. System Components
+    4. State Machine Specifications
+    5. Refinement Layers
+    6. Module Catalog
+    7. Dependency Graph
+    8. Formal Properties & Invariants
+    9. Security Considerations
+    10. Extensibility (Plugin System)
+    11. Conclusion
+    """
     
     def __init__(self, base_path: str):
         self.base_path = base_path
@@ -466,13 +509,16 @@ stateDiagram-v2
             parts.append(f"**Classes:** {', '.join(c['name'] for c in analyzer.classes)}")
         
         if analyzer.functions:
-            funcs = ', '.join(analyzer.functions[:5])
-            if len(analyzer.functions) > 5:
-                funcs += f" ... (+{len(analyzer.functions) - 5} more)"
+            funcs = ', '.join(analyzer.functions[:MAX_ITEMS_PREVIEW])
+            if len(analyzer.functions) > MAX_ITEMS_PREVIEW:
+                funcs += f" ... (+{len(analyzer.functions) - MAX_ITEMS_PREVIEW} more)"
             parts.append(f"**Functions:** {funcs}")
         
         if analyzer.exports:
-            parts.append(f"**Exports:** {', '.join(analyzer.exports[:5])}")
+            exports = ', '.join(analyzer.exports[:MAX_ITEMS_PREVIEW])
+            if len(analyzer.exports) > MAX_ITEMS_PREVIEW:
+                exports += f" ... (+{len(analyzer.exports) - MAX_ITEMS_PREVIEW} more)"
+            parts.append(f"**Exports:** {exports}")
         
         return '\n'.join(parts) + '\n'
     
@@ -947,8 +993,24 @@ This overview presents Puffin as a formally specified system with clear architec
 
 def main():
     """Main entry point for the overview generator."""
-    # Get the base path of the project
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    import sys
+    
+    # Get the base path of the project (script directory or command line arg)
+    if len(sys.argv) > 1:
+        base_path = os.path.abspath(sys.argv[1])
+        if not os.path.isdir(base_path):
+            print(f"Error: '{base_path}' is not a valid directory")
+            sys.exit(1)
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    
+    # Verify we're in a Puffin project (has src directory)
+    src_path = os.path.join(base_path, 'src')
+    if not os.path.isdir(src_path):
+        print(f"Error: No 'src' directory found in {base_path}")
+        print("This script should be run from the Puffin project root directory")
+        print("Usage: python3 generate_overview.py [project_path]")
+        sys.exit(1)
     
     print("Puffin OVERVIEW.md Generator")
     print("=" * 50)

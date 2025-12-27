@@ -212,7 +212,7 @@ class MutationTestingService {
   applyMutation(code, mutation, occurrence) {
     const before = code.substring(0, occurrence.index)
     const after = code.substring(occurrence.index + occurrence.match.length)
-    const replacement = typeof mutation.to === 'string' ? mutation.to : mutation.to
+    const replacement = mutation.to
     
     return before + replacement + after
   }
@@ -393,6 +393,15 @@ class MutationTestingService {
   reset() {
     this.mutants = []
     this.results = []
+  }
+
+  /**
+   * Set results for testing purposes
+   * @param {MutationResult[]} results - Array of mutation results
+   * @private
+   */
+  _setResultsForTesting(results) {
+    this.results = results
   }
 }
 

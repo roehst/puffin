@@ -94,7 +94,7 @@ module.exports = { add, isPositive, isEven, greet };
       }
     })
 
-    service.results = mockResults
+    service._setResultsForTesting(mockResults)
 
     // 5. Generate and display report
     const report = service.generateReport(5000) // 5 seconds simulated duration

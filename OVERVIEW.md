@@ -245,7 +245,7 @@ graph TD
 **Functions:** getToolEmoji, progress
 **Exports:** ClaudeService
 
-### 3.21 Main Process - Plugin System
+### 3.2 Main Process - Plugin System
 
 ```mermaid
 graph TD
@@ -338,7 +338,7 @@ graph TD
 
 **Exports:** HistoryService
 
-### 3.46 Renderer Process - Components
+### 3.3 Renderer Process - Components
 
 ```mermaid
 graph TD
@@ -450,7 +450,7 @@ graph TD
 **Functions:** updateProps, describe
 **Exports:** GuiDesignerComponent, modal
 
-### 3.73 Renderer Process - Core
+### 3.4 Renderer Process - Core
 
 ```mermaid
 graph TD
@@ -464,7 +464,7 @@ graph TD
 **Classes:** PuffinApp
 **Functions:** toActionType
 
-### 3.79 Renderer Process - Libraries
+### 3.5 Renderer Process - Libraries
 
 ```mermaid
 graph TD
@@ -503,7 +503,7 @@ graph TD
 **Functions:** computeSimilarityHash, simpleHash, generateOutputSummary
 **Exports:** computeSimilarityHash, generateOutputSummary
 
-### 3.91 Renderer Process - Plugin System
+### 3.6 Renderer Process - Plugin System
 
 ```mermaid
 graph TD
@@ -559,7 +559,7 @@ graph TD
 **Classes:** PluginComponentLoader
 **Exports:** PluginComponentLoader, pluginComponentLoader
 
-### 3.107 Renderer Process - SAM Pattern
+### 3.7 Renderer Process - SAM Pattern
 
 ```mermaid
 graph TD
@@ -621,7 +621,7 @@ graph TD
 **Functions:** findStoryIdsForPrompt, buildUiBranchContext, buildArchitectureBranchContext, buildBackendBranchContext, findPromptById ... (+3 more)
 **Exports:** initialModel, initializeAcceptor, loadStateAcceptor, appErrorAcceptor, recoverAcceptor
 
-### 3.125 Shared Utilities
+### 3.8 Shared Utilities
 
 ```mermaid
 graph TD
@@ -959,7 +959,7 @@ Puffin State Manager Manages the .puffin/ directory within a target project. All
 
 ---
 
-### 6.91 Main Process - Plugin System
+### 6.2 Main Process - Plugin System
 
 #### src/main/plugins/contribution-parser.js
 
@@ -1110,7 +1110,7 @@ View Registry Central registry for plugin view contributions. Manages view regis
 
 ---
 
-### 6.186 Renderer Process - Components
+### 6.3 Renderer Process - Components
 
 #### src/renderer/components/architecture/architecture.js
 
@@ -1277,7 +1277,7 @@ User Story Review Modal Component Displays derived stories for review and iterat
 
 ---
 
-### 6.297 Renderer Process - Core
+### 6.4 Renderer Process - Core
 
 #### src/renderer/app.js
 
@@ -1293,7 +1293,7 @@ Puffin - Application Bootstrap Main entry point for the renderer process. Initia
 
 ---
 
-### 6.308 Renderer Process - Libraries
+### 6.5 Renderer Process - Libraries
 
 #### src/renderer/lib/activity-tracker.js
 
@@ -1344,7 +1344,7 @@ State Persistence Manager Handles persisting state changes to the .puffin/ direc
 
 ---
 
-### 6.342 Renderer Process - Plugin System
+### 6.6 Renderer Process - Plugin System
 
 #### src/renderer/plugins/plugin-component-loader.js
 
@@ -1430,7 +1430,7 @@ Plugin Style Injector Handles CSS injection and removal for plugins. Manages plu
 
 ---
 
-### 6.398 Renderer Process - SAM Pattern
+### 6.7 Renderer Process - SAM Pattern
 
 #### src/renderer/lib/sam-fsm.js
 
@@ -1571,7 +1571,7 @@ Puffin SAM State State computes the view representation from the model. It deriv
 
 ---
 
-### 6.503 Shared Utilities
+### 6.8 Shared Utilities
 
 #### src/shared/constants.js
 

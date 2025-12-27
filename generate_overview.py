@@ -20,6 +20,33 @@ from typing import List, Dict, Set, Tuple
 from collections import defaultdict
 
 
+# Configuration constants
+MAX_DIAGRAM_NODES = 10  # Maximum nodes to show in component diagrams
+MAX_FUNCTIONS_DISPLAY = 10  # Maximum functions to list before truncating
+
+# Regex patterns for code analysis
+# Match: const {items} = require('module') or let name = require('module')
+REQUIRE_PATTERN = r"(?:const|let|var)\s+(?:\{([^}]+)\}|(\w+))\s*=\s*require\(['\"]([^'\"]+)['\"]\)"
+# Match: import {items} from 'module' or import name from 'module'
+IMPORT_PATTERN = r"import\s+(?:\{([^}]+)\}|(\w+))\s+from\s+['\"]([^'\"]+)['\"]"
+# Match: module.exports = {items} or module.exports = name
+MODULE_EXPORTS_PATTERN = r"module\.exports\s*=\s*(?:\{([^}]+)\}|(\w+))"
+# Match: export default class/function/const name or export class/function name
+EXPORT_PATTERN = r"export\s+(?:default\s+)?(?:class|function|const|let|var)?\s*(\w+)"
+# Match: class ClassName or class ClassName extends ParentClass
+CLASS_PATTERN = r"class\s+(\w+)(?:\s+extends\s+(\w+))?\s*\{"
+# Match: function functionName() or async function functionName()
+FUNCTION_PATTERN = r"(?:async\s+)?function\s+(\w+)\s*\([^)]*\)"
+# Match: const functionName = () => or let functionName = async () =>
+ARROW_FUNCTION_PATTERN = r"(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>"
+# Match: const CONSTANT_NAME = (uppercase with underscores)
+CONST_UPPER_PATTERN = r"const\s+([A-Z_][A-Z0-9_]*)\s*="
+# Match: JSDoc style block comments
+JSDOC_PATTERN = r"^\/\*\*\s*\n((?:\s*\*.*\n)+)\s*\*\/"
+# Match: Single-line comments at start of file
+SINGLE_LINE_COMMENT_PATTERN = r"^//\s*(.+)"
+
+
 class FileAnalyzer:
     """Analyzes JavaScript source files to extract structure and dependencies."""
     
@@ -66,8 +93,7 @@ class FileAnalyzer:
     def _extract_imports(self):
         """Extract import statements."""
         # Match require() statements
-        require_pattern = r"(?:const|let|var)\s+(?:\{([^}]+)\}|(\w+))\s*=\s*require\(['\"]([^'\"]+)['\"]\)"
-        for match in re.finditer(require_pattern, self.content):
+        for match in re.finditer(REQUIRE_PATTERN, self.content):
             if match.group(1):  # Destructured import
                 items = [item.strip() for item in match.group(1).split(',')]
                 self.imports.append({'type': 'destructured', 'items': items, 'from': match.group(3)})
@@ -75,8 +101,7 @@ class FileAnalyzer:
                 self.imports.append({'type': 'default', 'name': match.group(2), 'from': match.group(3)})
         
         # Match ES6 import statements
-        import_pattern = r"import\s+(?:\{([^}]+)\}|(\w+))\s+from\s+['\"]([^'\"]+)['\"]"
-        for match in re.finditer(import_pattern, self.content):
+        for match in re.finditer(IMPORT_PATTERN, self.content):
             if match.group(1):  # Named imports
                 items = [item.strip() for item in match.group(1).split(',')]
                 self.imports.append({'type': 'named', 'items': items, 'from': match.group(3)})
@@ -86,8 +111,7 @@ class FileAnalyzer:
     def _extract_exports(self):
         """Extract export statements."""
         # Match module.exports
-        module_exports_pattern = r"module\.exports\s*=\s*(?:\{([^}]+)\}|(\w+))"
-        match = re.search(module_exports_pattern, self.content)
+        match = re.search(MODULE_EXPORTS_PATTERN, self.content)
         if match:
             if match.group(1):  # Object exports
                 items = [item.strip().split(':')[0].strip() for item in match.group(1).split(',')]
@@ -96,15 +120,13 @@ class FileAnalyzer:
                 self.exports = [match.group(2)]
         
         # Match ES6 exports
-        export_pattern = r"export\s+(?:default\s+)?(?:class|function|const|let|var)?\s*(\w+)"
-        for match in re.finditer(export_pattern, self.content):
+        for match in re.finditer(EXPORT_PATTERN, self.content):
             if match.group(1) and match.group(1) not in self.exports:
                 self.exports.append(match.group(1))
     
     def _extract_classes(self):
         """Extract class definitions."""
-        class_pattern = r"class\s+(\w+)(?:\s+extends\s+(\w+))?\s*\{"
-        for match in re.finditer(class_pattern, self.content):
+        for match in re.finditer(CLASS_PATTERN, self.content):
             self.classes.append({
                 'name': match.group(1),
                 'extends': match.group(2) if match.group(2) else None
@@ -113,29 +135,25 @@ class FileAnalyzer:
     def _extract_functions(self):
         """Extract function definitions."""
         # Match function declarations
-        func_pattern = r"(?:async\s+)?function\s+(\w+)\s*\([^)]*\)"
-        for match in re.finditer(func_pattern, self.content):
+        for match in re.finditer(FUNCTION_PATTERN, self.content):
             if match.group(1) not in self.functions:
                 self.functions.append(match.group(1))
         
         # Match arrow functions assigned to variables
-        arrow_pattern = r"(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>"
-        for match in re.finditer(arrow_pattern, self.content):
+        for match in re.finditer(ARROW_FUNCTION_PATTERN, self.content):
             if match.group(1) not in self.functions:
                 self.functions.append(match.group(1))
     
     def _extract_constants(self):
-        """Extract constant definitions."""
-        const_pattern = r"const\s+([A-Z_][A-Z0-9_]*)\s*="
-        for match in re.finditer(const_pattern, self.content):
+        """Extract constant definitions (uppercase naming convention)."""
+        for match in re.finditer(CONST_UPPER_PATTERN, self.content):
             if match.group(1) not in self.constants:
                 self.constants.append(match.group(1))
     
     def _extract_description(self):
         """Extract description from file header comments."""
         # Look for JSDoc style comments at the start
-        doc_pattern = r"^\/\*\*\s*\n((?:\s*\*.*\n)+)\s*\*\/"
-        match = re.search(doc_pattern, self.content, re.MULTILINE)
+        match = re.search(JSDOC_PATTERN, self.content, re.MULTILINE)
         if match:
             lines = match.group(1).split('\n')
             desc_lines = []
@@ -147,8 +165,7 @@ class FileAnalyzer:
         
         # Fallback to single line comment at start
         if not self.description:
-            comment_pattern = r"^//\s*(.+)"
-            match = re.search(comment_pattern, self.content, re.MULTILINE)
+            match = re.search(SINGLE_LINE_COMMENT_PATTERN, self.content, re.MULTILINE)
             if match:
                 self.description = match.group(1).strip()
 
@@ -412,18 +429,20 @@ stateDiagram-v2
         """Generate component specifications."""
         sections = ["---\n\n## 3. System Components\n"]
         
+        category_number = 1
         for category in sorted(self.categories.keys()):
             files = self.categories[category]
             if not files:
                 continue
                 
-            sections.append(f"### 3.{len(sections)} {category}\n")
+            sections.append(f"### 3.{category_number} {category}\n")
+            category_number += 1
             
             # Create component diagram for this category
             sections.append("```mermaid")
             sections.append("graph TD")
             
-            for i, file_analyzer in enumerate(files[:10]):  # Limit to prevent huge diagrams
+            for i, file_analyzer in enumerate(files[:MAX_DIAGRAM_NODES]):
                 file_name = os.path.basename(file_analyzer.relative_path).replace('.js', '')
                 node_id = f"C{i}"
                 sections.append(f"    {node_id}[{file_name}]")
@@ -621,9 +640,11 @@ renderer_process.components.prompt ↦ src/renderer/components/prompt-editor/
         sections.append("Complete listing of all modules with their specifications.\n")
         
         # Group by category
+        category_number = 1
         for category in sorted(self.categories.keys()):
             files = self.categories[category]
-            sections.append(f"### 6.{len(sections)-1} {category}\n")
+            sections.append(f"### 6.{category_number} {category}\n")
+            category_number += 1
             
             for file_analyzer in sorted(files, key=lambda x: x.relative_path):
                 sections.append(f"#### {file_analyzer.relative_path}\n")
@@ -640,13 +661,13 @@ renderer_process.components.prompt ↦ src/renderer/components/prompt-editor/
                 
                 if file_analyzer.functions:
                     sections.append(f"**Functions:** {len(file_analyzer.functions)}")
-                    if len(file_analyzer.functions) <= 10:
+                    if len(file_analyzer.functions) <= MAX_FUNCTIONS_DISPLAY:
                         for func in file_analyzer.functions:
                             sections.append(f"- `{func}()`")
                     else:
-                        for func in file_analyzer.functions[:10]:
+                        for func in file_analyzer.functions[:MAX_FUNCTIONS_DISPLAY]:
                             sections.append(f"- `{func}()`")
-                        sections.append(f"- ... and {len(file_analyzer.functions) - 10} more")
+                        sections.append(f"- ... and {len(file_analyzer.functions) - MAX_FUNCTIONS_DISPLAY} more")
                     sections.append("")
                 
                 if file_analyzer.constants:

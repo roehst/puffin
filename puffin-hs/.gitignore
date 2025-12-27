@@ -1,0 +1,26 @@
+# Stack
+.stack-work/
+
+# GHC
+dist/
+dist-newstyle/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Generated files
+cabal.project.local
+.ghc.environment.*

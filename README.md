@@ -6,6 +6,13 @@
 
 A GUI for Claude Code to help cloders collaborate on new projects.
 
+## Available Implementations
+
+- **JavaScript/Electron** (this directory): Full-featured GUI application for Windows, Mac, and Linux
+- **Haskell** ([puffin-hs/](puffin-hs/)): Type-safe terminal UI implementation with strong correctness guarantees
+
+See [HASKELL_TRANSLATION.md](HASKELL_TRANSLATION.md) for details about the Haskell translation.
+
 ## Why Puffin?
 
 Claude Code is extraordinary out of the box. It can take you to production for projects in the 10k-100k LoC range. But as projects grow, maintaining context, traceability, and structured collaboration becomes critical.

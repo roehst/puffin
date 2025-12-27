@@ -8,6 +8,11 @@ out/
 # Electron
 *.log
 
+# Haskell build artifacts
+puffin-hs/.stack-work/
+puffin-hs/dist-newstyle/
+puffin-hs/.ghc.environment.*
+
 # OS files
 .DS_Store
 Thumbs.db

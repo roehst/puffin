@@ -1,6 +1,5 @@
 # Stack
 .stack-work/
-*.cabal
 
 # GHC
 dist/
